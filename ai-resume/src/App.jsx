@@ -4,6 +4,7 @@ import { Button } from './components/ui/button'
 import { Navigate,Outlet } from 'react-router'
 import { useUser } from '@clerk/clerk-react'
 import Header from './components/custum/Header'
+import { Toaster } from './components/ui/sonner'
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
     <>
        <Header/>
        <Outlet/>
+       <Toaster/>
      
     </>
   )
