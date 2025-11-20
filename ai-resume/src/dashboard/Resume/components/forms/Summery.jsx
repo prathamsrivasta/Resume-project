@@ -29,18 +29,28 @@ function Summery({ enabledNext }) {
 
   const GenerateSummeryFromAI = async () => {
     setLoading(true);
-    const PROMPT = prompt.replace("{jobTitle}", resumeInfo?.jobTitle);
-    console.log(PROMPT);
+
+    // STRICT JSON prompt (important)
+    const PROMPT = `
+      ${prompt.replace("{jobTitle}", resumeInfo?.jobTitle)}
+      Return ONLY a valid JSON array. No explanation, no markdown, no extra text.
+    `;
 
     try {
       const result = await AIChatSession.sendMessage(PROMPT);
-      const text = await result.response.text(); // Await the response text
-      const parsed = JSON.parse(text);
+      const raw = await result.response.text();
 
-      // Check if it's an array or needs further extraction
+      // Clean AI output: removes ```json blocks etc.
+      const clean = raw
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const parsed = JSON.parse(clean);
+
       const summariesArray = Array.isArray(parsed)
         ? parsed
-        : parsed.summaries || []; // fallback if summaries is a key
+        : parsed.summaries || [];
 
       setAiGenerateSummeryList(summariesArray);
       console.log(summariesArray);
@@ -94,6 +104,7 @@ function Summery({ enabledNext }) {
               <Brain className="h-4 w-4" /> Generate from AI
             </Button>
           </div>
+
           <Textarea
             className="mt-5"
             required
@@ -101,6 +112,7 @@ function Summery({ enabledNext }) {
             defaultValue={summery ? summery : resumeInfo?.summery}
             onChange={(e) => setSummery(e.target.value)}
           />
+
           <div className="mt-2 flex justify-end">
             <Button type="submit" disabled={loading}>
               {loading ? <LoaderCircle className="animate-spin" /> : "Save"}
